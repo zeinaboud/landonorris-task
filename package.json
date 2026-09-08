@@ -9,9 +9,17 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "@rive-app/canvas-lite": "^2.42.0",
+    "gsap": "^3.15.0",
     "next": "16.3.4",
+    "potrace": "^2.1.8",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "react-icons": "^5.7.0",
+    "sharp": "^0.35.4",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
