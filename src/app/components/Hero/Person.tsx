@@ -49,7 +49,7 @@ const Person = () => {
         ref={personRef}
         src="/assets/hero/person.png"
         alt="Lando Norris"
-        className="md:h-[92vh] flex justify-center h-[80vh] w-auto max-w-none object-contain object-bottom"
+        className="md:h-[92vh] flex justify-center h-[70vh] w-auto max-w-none object-contain object-bottom"
         style={{
           transformStyle: "preserve-3d",
           willChange: "transform",

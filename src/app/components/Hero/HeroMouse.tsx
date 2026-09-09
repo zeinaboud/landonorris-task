@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useRef,
-} from "react";
+import { createContext, ReactNode, useContext, useEffect, useRef } from "react";
 import * as THREE from "three";
 
 type HeroMouseContextValue = {
@@ -15,59 +9,30 @@ type HeroMouseContextValue = {
   velocity: React.MutableRefObject<THREE.Vector2>;
 };
 
-const HeroMouseContext =
-  createContext<HeroMouseContextValue | null>(
-    null,
-  );
+const HeroMouseContext = createContext<HeroMouseContextValue | null>(null);
 
-export const HeroMouseProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
-  const target = useRef(
-    new THREE.Vector2(0.5, 0.5),
-  );
+export const HeroMouseProvider = ({ children }: { children: ReactNode }) => {
+  const target = useRef(new THREE.Vector2(0.5, 0.5));
 
-  const current = useRef(
-    new THREE.Vector2(0.5, 0.5),
-  );
+  const current = useRef(new THREE.Vector2(0.5, 0.5));
 
-  const velocity = useRef(
-    new THREE.Vector2(0, 0),
-  );
+  const velocity = useRef(new THREE.Vector2(0, 0));
 
-  const lastMouse = useRef(
-    new THREE.Vector2(0.5, 0.5),
-  );
+  const lastMouse = useRef(new THREE.Vector2(0.5, 0.5));
 
   useEffect(() => {
-    const handleMouseMove = (
-      event: MouseEvent,
-    ) => {
-      const x =
-        event.clientX /
-        window.innerWidth;
+    const handleMouseMove = (event: MouseEvent) => {
+      const x = event.clientX / window.innerWidth;
 
-      const y =
-        1 -
-        event.clientY /
-        window.innerHeight;
+      const y = 1 - event.clientY / window.innerHeight;
 
       target.current.set(x, y);
     };
 
-    window.addEventListener(
-      "mousemove",
-      handleMouseMove,
-      { passive: true },
-    );
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
 
     return () => {
-      window.removeEventListener(
-        "mousemove",
-        handleMouseMove,
-      );
+      window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
 
@@ -76,44 +41,27 @@ export const HeroMouseProvider = ({
 
     const update = () => {
       // Smooth position
-      current.current.lerp(
-        target.current,
-        0.09,
-      );
+      current.current.lerp(target.current, 0.09);
 
       // Calculate velocity from smoothed position
-      const dx =
-        current.current.x -
-        lastMouse.current.x;
+      const dx = current.current.x - lastMouse.current.x;
 
-      const dy =
-        current.current.y -
-        lastMouse.current.y;
+      const dy = current.current.y - lastMouse.current.y;
 
-      velocity.current.set(
-        dx,
-        dy,
-      );
+      velocity.current.set(dx, dy);
 
-      lastMouse.current.copy(
-        current.current,
-      );
+      lastMouse.current.copy(current.current);
 
       // Slowly settle velocity
-      velocity.current.multiplyScalar(
-        0.92,
-      );
+      velocity.current.multiplyScalar(0.92);
 
-      animationFrame =
-        requestAnimationFrame(update);
+      animationFrame = requestAnimationFrame(update);
     };
 
     update();
 
     return () => {
-      cancelAnimationFrame(
-        animationFrame,
-      );
+      cancelAnimationFrame(animationFrame);
     };
   }, []);
 
@@ -131,15 +79,10 @@ export const HeroMouseProvider = ({
 };
 
 export const useHeroMouse = () => {
-  const context =
-    useContext(
-      HeroMouseContext,
-    );
+  const context = useContext(HeroMouseContext);
 
   if (!context) {
-    throw new Error(
-      "useHeroMouse must be used inside HeroMouseProvider",
-    );
+    throw new Error("useHeroMouse must be used inside HeroMouseProvider");
   }
 
   return context;
