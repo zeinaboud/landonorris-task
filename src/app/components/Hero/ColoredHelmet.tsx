@@ -1,567 +1,457 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
+import { useHeroMouse } from "./HeroMouse";
 
-const ColoredHelmet = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
+const MODEL_PATH = "/assets/hero/helmet-21.glb";
+
+const BASE_COLOR =
+  "/assets/hero/textures/helmet/webp/gold/Norris_Helmet_mat_BaseColor.webp";
+
+const METALLIC =
+  "/assets/hero/textures/helmet/webp/Norris_Helmet_mat_Metallic.webp";
+
+const NORMAL =
+  "/assets/hero/textures/helmet/webp/Norris_Helmet_mat_Normal.webp";
+
+const ROUGHNESS =
+  "/assets/hero/textures/helmet/webp/Norris_Helmet_mat_Roughness.webp";
+
+function ColoredHelmetModel() {
+  const { scene } = useGLTF(MODEL_PATH);
+
+  const { current } = useHeroMouse();
+
+  const { size } = useThree();
+
+  const materialsRef = useRef<THREE.MeshStandardMaterial[]>([]);
+
+  const smoothMouse = useRef(new THREE.Vector2(0.5, 0.5));
+
+  const timeRef = useRef(0);
 
   useEffect(() => {
-    const container = containerRef.current;
+    const loader = new THREE.TextureLoader();
 
-    if (!container) return;
+    const baseColor = loader.load(BASE_COLOR);
+    const metallic = loader.load(METALLIC);
+    const normal = loader.load(NORMAL);
+    const roughness = loader.load(ROUGHNESS);
 
-    // ==================================================
-    // HELMET IMAGE POSITION / SIZE
-    // ==================================================
+    // Base color needs sRGB
+    baseColor.colorSpace = THREE.SRGBColorSpace;
 
-    const HELMET_SCALE = 2.3;
+    // Data textures stay linear
+    metallic.colorSpace = THREE.NoColorSpace;
 
-    const HELMET_X = 0;
+    normal.colorSpace = THREE.NoColorSpace;
 
-    const HELMET_Y = -0.4;
+    roughness.colorSpace = THREE.NoColorSpace;
 
-    // ==================================================
-    // SCENE
-    // ==================================================
+    // GLB UV orientation
+    baseColor.flipY = false;
+    metallic.flipY = false;
+    normal.flipY = false;
+    roughness.flipY = false;
 
-    const scene = new THREE.Scene();
+    scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) {
+        return;
+      }
 
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+      const material = new THREE.MeshStandardMaterial({
+        map: baseColor,
 
-    const renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: true,
-      powerPreference: "high-performance",
-    });
+        metalnessMap: metallic,
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        normalMap: normal,
 
-    renderer.setSize(container.clientWidth, container.clientHeight);
+        roughnessMap: roughness,
 
-    renderer.setClearColor(0x000000, 0);
+        metalness: 1,
 
-    container.appendChild(renderer.domElement);
+        roughness: 0.35,
 
-    // ==================================================
-    // TEXTURE
-    // ==================================================
+        transparent: true,
 
-    const textureLoader = new THREE.TextureLoader();
+        opacity: 1,
 
-    const helmetTexture = textureLoader.load(
-      "/assets/hero/unvisible-helmet.png",
-    );
+        depthTest: true,
 
-    helmetTexture.minFilter = THREE.LinearFilter;
+        depthWrite: false,
 
-    helmetTexture.magFilter = THREE.LinearFilter;
+        side: THREE.FrontSide,
+      });
 
-    helmetTexture.wrapS = THREE.ClampToEdgeWrapping;
+      material.onBeforeCompile = (shader) => {
+        // -----------------------------------------
+        // UNIFORMS
+        // -----------------------------------------
 
-    helmetTexture.wrapT = THREE.ClampToEdgeWrapping;
-
-    helmetTexture.colorSpace = THREE.SRGBColorSpace;
-
-    // ==================================================
-    // GEOMETRY
-    // ==================================================
-
-    const geometry = new THREE.PlaneGeometry(1, 1);
-
-    // ==================================================
-    // MATERIAL
-    // ==================================================
-
-    const material = new THREE.ShaderMaterial({
-      transparent: true,
-
-      depthWrite: false,
-
-      depthTest: false,
-
-      uniforms: {
-        uTexture: {
-          value: helmetTexture,
-        },
-
-        uTime: {
-          value: 0,
-        },
-
-        uMouse: {
+        shader.uniforms.uRevealMouse = {
           value: new THREE.Vector2(0.5, 0.5),
-        },
+        };
 
-        uMouseVelocity: {
-          value: new THREE.Vector2(0, 0),
-        },
+        shader.uniforms.uResolution = {
+          value: new THREE.Vector2(window.innerWidth, window.innerHeight),
+        };
 
-        uResolution: {
-          value: new THREE.Vector2(
-            container.clientWidth,
-            container.clientHeight,
-          ),
-        },
-
-        uRadius: {
+        shader.uniforms.uRevealRadius = {
           value: 0.105,
-        },
+        };
 
-        uSoftness: {
+        shader.uniforms.uRevealSoftness = {
           value: 0.075,
-        },
-      },
+        };
 
-      // ==================================================
-      // VERTEX
-      // ==================================================
+        shader.uniforms.uTime = {
+          value: 0,
+        };
 
-      vertexShader: `
+        // -----------------------------------------
+        // COMMON
+        // -----------------------------------------
 
-      varying vec2 vUv;
+        shader.fragmentShader = shader.fragmentShader.replace(
+          "#include <common>",
+          `
+              #include <common>
 
-      void main() {
+              uniform vec2 uRevealMouse;
 
-        vUv = uv;
+              uniform vec2 uResolution;
 
-        gl_Position =
-          projectionMatrix *
-          modelViewMatrix *
-          vec4(
-            position,
-            1.0
-          );
-      }
+              uniform float uRevealRadius;
 
-    `,
+              uniform float uRevealSoftness;
 
-      // ==================================================
-      // FRAGMENT
-      // ==================================================
-
-      fragmentShader: `
-
-      uniform sampler2D uTexture;
-
-      uniform float uTime;
-
-      uniform vec2 uMouse;
-
-      uniform vec2 uMouseVelocity;
-
-      uniform vec2 uResolution;
-
-      uniform float uRadius;
-
-      uniform float uSoftness;
-
-      varying vec2 vUv;
-
-
-      // ==================================================
-      // RANDOM
-      // ==================================================
-
-      float random(vec2 p) {
-
-        return fract(
-          sin(
-            dot(
-              p,
-              vec2(
-                127.1,
-                311.7
-              )
-            )
-          )
-          *
-          43758.5453123
+              uniform float uTime;
+            `,
         );
-      }
+
+        // -----------------------------------------
+        // ORGANIC REVEAL MASK
+        // -----------------------------------------
+
+        shader.fragmentShader = shader.fragmentShader.replace(
+          "#include <alphatest_fragment>",
+          `
+              // -----------------------------------
+              // SCREEN SPACE
+              // -----------------------------------
+
+              vec2 screenUV =
+                gl_FragCoord.xy /
+                uResolution;
 
 
-      // ==================================================
-      // NOISE
-      // ==================================================
+              // -----------------------------------
+              // POSITION RELATIVE TO MOUSE
+              // -----------------------------------
 
-      float noise(vec2 p) {
-
-        vec2 i =
-          floor(p);
-
-        vec2 f =
-          fract(p);
+              vec2 p =
+                screenUV -
+                uRevealMouse;
 
 
-        f =
-          f *
-          f *
-          (
-            3.0 -
-            2.0 *
-            f
-          );
+              // Correct aspect ratio
+              // so the blob doesn't become oval
+              // because of the screen dimensions.
+
+              p.x *=
+                uResolution.x /
+                uResolution.y;
 
 
-        float a =
-          random(i);
+              // Distance from mouse
 
-        float b =
-          random(
-            i +
-            vec2(
-              1.0,
-              0.0
-            )
-          );
-
-        float c =
-          random(
-            i +
-            vec2(
-              0.0,
-              1.0
-            )
-          );
-
-        float d =
-          random(
-            i +
-            vec2(
-              1.0,
-              1.0
-            )
-          );
+              float distanceFromMouse =
+                length(p);
 
 
-        return mix(
-          mix(
-            a,
-            b,
-            f.x
-          ),
-          mix(
-            c,
-            d,
-            f.x
-          ),
-          f.y
+              // Angle around mouse
+
+              float angle =
+                atan(
+                  p.y,
+                  p.x
+                );
+
+
+              // -----------------------------------
+              // ORGANIC DISTORTION
+              // -----------------------------------
+
+              float distortion =
+                  sin(
+                    angle * 3.0 +
+                    uTime * 1.4
+                  ) * 0.018
+
+                + sin(
+                    angle * 5.0 -
+                    uTime * 1.1
+                  ) * 0.012
+
+                + sin(
+                    angle * 8.0 +
+                    uTime * 0.8
+                  ) * 0.008
+
+                + sin(
+                    angle * 13.0 -
+                    uTime * 0.6
+                  ) * 0.004;
+
+
+              // -----------------------------------
+              // SUBTLE RADIAL MOVEMENT
+              // -----------------------------------
+
+              float radialWave =
+                sin(
+                  distanceFromMouse * 28.0 -
+                  uTime * 2.5
+                ) * 0.004;
+
+
+              // -----------------------------------
+              // FINAL ORGANIC RADIUS
+              // -----------------------------------
+
+              float organicRadius =
+                uRevealRadius +
+                distortion +
+                radialWave;
+
+
+              // -----------------------------------
+              // SOFT MASK
+              // -----------------------------------
+
+              float reveal =
+                1.0 -
+                smoothstep(
+                  organicRadius,
+                  organicRadius +
+                    uRevealSoftness,
+                  distanceFromMouse
+                );
+
+
+              // -----------------------------------
+              // MOVING EDGE
+              // -----------------------------------
+
+              float edge =
+                smoothstep(
+                  organicRadius * 0.55,
+                  organicRadius +
+                    uRevealSoftness,
+                  distanceFromMouse
+                );
+
+
+              float edgeWave =
+                sin(
+                  distanceFromMouse * 40.0 -
+                  uTime * 3.5
+                );
+
+
+              reveal +=
+                edgeWave *
+                0.004 *
+                edge;
+
+
+              // -----------------------------------
+              // CLAMP
+              // -----------------------------------
+
+              reveal =
+                clamp(
+                  reveal,
+                  0.0,
+                  1.0
+                );
+
+
+              // -----------------------------------
+              // HIDE OUTSIDE MASK
+              // -----------------------------------
+
+              if (reveal <= 0.001) {
+                discard;
+              }
+
+
+              // Apply reveal to material alpha
+
+              diffuseColor.a *= reveal;
+
+
+              #include <alphatest_fragment>
+            `,
         );
-      }
 
+        // Save compiled shader
+        material.userData.shader = shader;
+      };
 
-      // ==================================================
-      // MAIN
-      // ==================================================
+      material.needsUpdate = true;
 
-      void main() {
+      object.material = material;
 
-        // ----------------------------------------------
-        // Helmet image
-        // ----------------------------------------------
-
-        vec4 image =
-          texture2D(
-            uTexture,
-            vUv
-          );
-
-
-        // ----------------------------------------------
-        // Cursor
-        // ----------------------------------------------
-
-        float aspect =
-          uResolution.x /
-          uResolution.y;
-
-
-        vec2 relative =
-          vUv -
-          uMouse;
-
-
-        relative.x *=
-          aspect;
-
-
-        // ----------------------------------------------
-        // Mouse speed
-        // ----------------------------------------------
-
-        float speed =
-          length(
-            uMouseVelocity
-          );
-
-
-        speed =
-          clamp(
-            speed * 20.0,
-            0.0,
-            1.0
-          );
-
-
-        // ----------------------------------------------
-        // Ellipse
-        // ----------------------------------------------
-
-        float radiusX =
-          uRadius +
-          speed * 0.035;
-
-
-        float radiusY =
-          uRadius * 0.88 +
-          speed * 0.012;
-
-
-        // ----------------------------------------------
-        // Organic edge
-        // ----------------------------------------------
-
-        float angle =
-          atan(
-            relative.y,
-            relative.x
-          );
-
-
-        float wave1 =
-          sin(
-            angle * 5.0 +
-            uTime * 0.45
-          );
-
-
-        float wave2 =
-          sin(
-            angle * 8.0 -
-            uTime * 0.30
-          );
-
-
-        float organic =
-          noise(
-            vUv * 4.0 +
-            uTime * 0.04
-          );
-
-
-        float edge =
-            wave1 * 0.018
-          + wave2 * 0.010
-          + (
-              organic - 0.5
-            )
-            * 0.025;
-
-
-        // ----------------------------------------------
-        // Ellipse distance
-        // ----------------------------------------------
-
-        float ellipse =
-          sqrt(
-            pow(
-              relative.x /
-              radiusX,
-              2.0
-            )
-            +
-            pow(
-              relative.y /
-              radiusY,
-              2.0
-            )
-          );
-
-
-        ellipse +=
-          edge;
-
-
-        // ----------------------------------------------
-        // Invisible reveal mask
-        // ----------------------------------------------
-
-        float reveal =
-          1.0 -
-          smoothstep(
-            1.0,
-            1.0 +
-            uSoftness * 5.0,
-            ellipse
-          );
-
-
-        reveal =
-          clamp(
-            reveal,
-            0.0,
-            1.0
-          );
-
-
-        // ----------------------------------------------
-        // IMPORTANT
-        //
-        // No gray background.
-        // No shadow.
-        // No circle.
-        //
-        // Only the helmet image is revealed.
-        // ----------------------------------------------
-
-        gl_FragColor =
-          vec4(
-            image.rgb,
-            image.a * reveal
-          );
-      }
-
-    `,
+      materialsRef.current.push(material);
     });
 
-    // ==================================================
-    // MESH
-    // ==================================================
-
-    const mesh = new THREE.Mesh(geometry, material);
-
-    mesh.scale.set(HELMET_SCALE, HELMET_SCALE, 1);
-
-    mesh.position.set(HELMET_X, HELMET_Y, 0);
-
-    mesh.renderOrder = 30;
-
-    scene.add(mesh);
-
-    // ==================================================
-    // MOUSE
-    // ==================================================
-
-    const targetMouse = new THREE.Vector2(0.5, 0.5);
-
-    const currentMouse = new THREE.Vector2(0.5, 0.5);
-
-    const targetVelocity = new THREE.Vector2(0, 0);
-
-    const currentVelocity = new THREE.Vector2(0, 0);
-
-    let lastX = 0.5;
-
-    let lastY = 0.5;
-
-    const handleMouseMove = (event: MouseEvent) => {
-      const x = event.clientX / window.innerWidth;
-
-      const y = 1 - event.clientY / window.innerHeight;
-
-      targetMouse.set(x, y);
-
-      targetVelocity.set(x - lastX, y - lastY);
-
-      lastX = x;
-
-      lastY = y;
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-
-    // ==================================================
+    // -----------------------------------------
     // RESIZE
-    // ==================================================
+    // -----------------------------------------
 
     const handleResize = () => {
-      const width = container.clientWidth;
+      materialsRef.current.forEach((material) => {
+        const shader = material.userData.shader;
 
-      const height = container.clientHeight;
+        if (!shader) {
+          return;
+        }
 
-      renderer.setSize(width, height);
-
-      material.uniforms.uResolution.value.set(width, height);
+        shader.uniforms.uResolution.value.set(
+          window.innerWidth,
+          window.innerHeight,
+        );
+      });
     };
 
     window.addEventListener("resize", handleResize);
 
-    // ==================================================
-    // ANIMATION
-    // ==================================================
-
-    const clock = new THREE.Clock();
-
-    let animationFrame = 0;
-
-    const animate = () => {
-      animationFrame = requestAnimationFrame(animate);
-
-      material.uniforms.uTime.value = clock.getElapsedTime();
-
-      // ----------------------------------------------
-      // Smooth mouse
-      // ----------------------------------------------
-
-      currentMouse.lerp(targetMouse, 0.1);
-
-      material.uniforms.uMouse.value.copy(currentMouse);
-
-      // ----------------------------------------------
-      // Smooth velocity
-      // ----------------------------------------------
-
-      currentVelocity.lerp(targetVelocity, 0.15);
-
-      material.uniforms.uMouseVelocity.value.copy(currentVelocity);
-
-      // Gradually stop velocity
-      targetVelocity.multiplyScalar(0.82);
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    // ==================================================
+    // -----------------------------------------
     // CLEANUP
-    // ==================================================
+    // -----------------------------------------
 
     return () => {
-      cancelAnimationFrame(animationFrame);
-
-      window.removeEventListener("mousemove", handleMouseMove);
-
       window.removeEventListener("resize", handleResize);
 
-      geometry.dispose();
+      materialsRef.current.forEach((material) => {
+        material.dispose();
+      });
 
-      material.dispose();
+      baseColor.dispose();
 
-      helmetTexture.dispose();
+      metallic.dispose();
 
-      renderer.dispose();
+      normal.dispose();
 
-      if (renderer.domElement.parentNode === container) {
-        container.removeChild(renderer.domElement);
-      }
+      roughness.dispose();
+
+      materialsRef.current = [];
     };
-  }, []);
+  }, [scene]);
+
+  // -----------------------------------------
+  // MOUSE + ANIMATION
+  // -----------------------------------------
+
+  useFrame((state) => {
+    timeRef.current = state.clock.getElapsedTime();
+
+    const targetX = current.current.x;
+
+    const targetY = 1 - current.current.y;
+
+    // Smooth mouse movement
+
+    smoothMouse.current.x = THREE.MathUtils.lerp(
+      smoothMouse.current.x,
+      targetX,
+      0.12,
+    );
+
+    smoothMouse.current.y = THREE.MathUtils.lerp(
+      smoothMouse.current.y,
+      targetY,
+      0.12,
+    );
+
+    // Update shaders
+
+    materialsRef.current.forEach((material) => {
+      const shader = material.userData.shader;
+
+      if (!shader) {
+        return;
+      }
+
+      shader.uniforms.uRevealMouse.value.copy(smoothMouse.current);
+
+      shader.uniforms.uTime.value = timeRef.current;
+
+      shader.uniforms.uResolution.value.set(size.width, size.height);
+    });
+  });
+
+  // -----------------------------------------
+  // HELMET SCALE
+  // -----------------------------------------
+
+  const scale = size.width >= 1024 ? 30 : 23;
 
   return (
-    <div
-      ref={containerRef}
-      className="
-     pointer-events-none
-     absolute
-     inset-0
-     z-30
-     h-full
-     w-full
-   "
-    />
+    <group scale={scale} position={[0, 0, 0]}>
+      <primitive object={scene} />
+    </group>
   );
-};
+}
 
-export default ColoredHelmet;
+// -----------------------------------------
+// COMPONENT
+// -----------------------------------------
+
+export default function ColoredHelmet() {
+  return (
+    <div
+      className="
+        pointer-events-none
+        absolute
+        inset-0
+        z-30
+      "
+    >
+      <Canvas
+        camera={{
+          position: [0, 0, 5],
+          fov: 35,
+        }}
+        dpr={[1, 2]}
+        gl={{
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance",
+        }}
+      >
+        {/* Main light */}
+
+        <ambientLight intensity={1.8} />
+
+        {/* Front/right light */}
+
+        <directionalLight position={[3, 5, 5]} intensity={3} />
+
+        {/* Secondary light */}
+
+        <directionalLight position={[-4, 2, 3]} intensity={1.5} />
+
+        <ColoredHelmetModel />
+      </Canvas>
+    </div>
+  );
+}
+
+// Preload GLB
+
+useGLTF.preload(MODEL_PATH);
