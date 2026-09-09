@@ -42,14 +42,33 @@ const Person = () => {
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-10 flex items-end justify-center"
-      style={{ perspective: "1000px" }}
+      className="
+        pointer-events-none
+        absolute
+        inset-0
+        z-10
+        flex
+        items-end
+        justify-center
+      "
+      style={{
+        perspective: "1000px",
+      }}
     >
       <img
         ref={personRef}
-        src="/assets/hero/person.png"
+        src="/assets/hero/person2.webp"
         alt="Lando Norris"
-        className="md:h-[92vh] flex justify-center h-[70vh] w-auto max-w-none object-contain object-bottom"
+        className="
+          
+          h-[100%]
+          w-auto
+          max-w-none
+          object-contain
+          object-bottom
+          flex
+          justify-center
+        "
         style={{
           transformStyle: "preserve-3d",
           willChange: "transform",

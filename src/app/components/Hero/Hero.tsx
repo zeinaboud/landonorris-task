@@ -1,21 +1,26 @@
-import { NextScript } from "next/document";
+"use client";
+
 import ColoredHelmet from "./ColoredHelmet";
+import GrayPerson from "./GrayPerson";
 import Helmet3D from "./Helmet3D";
 import HeroBackground from "./HeroBackground";
 import { HeroMouseProvider } from "./HeroMouse";
 import Person from "./Person";
-import NextRace from "./NextRace";
+import ScrollLockButton from "./ScrollLockButton";
 
 const Hero = () => {
   return (
     <HeroMouseProvider>
-      <section className="relative min-h-screen overflow-hidden bg-white">
+      <div className="relative h-full w-full overflow-hidden">
         <HeroBackground />
+
         <Person />
+
         <Helmet3D />
+
         <ColoredHelmet />
-        <NextRace />
-      </section>
+        <ScrollLockButton />
+      </div>
     </HeroMouseProvider>
   );
 };

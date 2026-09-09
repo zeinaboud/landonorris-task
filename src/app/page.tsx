@@ -1,16 +1,18 @@
-import React from "react";
-import Navbar from "./components/Navbar/Navbar";
-import Hero from "./components/Hero/Hero";
+import Hero from "@/app/components/Hero/Hero";
+import HeroScroll from "@/app/components/Hero/HeroScroll";
+import NextRace from "@/app/components/Hero/NextRace";
 import Intro from "./components/intro/Intro";
+import Navbar from "./components/Navbar/Navbar";
 
-const page = () => {
+export default function Home() {
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      <Hero />
-      <Navbar />
+    <main>
       <Intro />
+      <Navbar />
+
+      <HeroScroll nextSection={<NextRace />}>
+        <Hero />
+      </HeroScroll>
     </main>
   );
-};
-
-export default page;
+}

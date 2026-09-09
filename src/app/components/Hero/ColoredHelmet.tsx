@@ -418,7 +418,11 @@ export default function ColoredHelmet() {
       className="
         pointer-events-none
         absolute
-        inset-0
+        left-1/2
+        top-0
+        h-full
+        w-screen
+        -translate-x-1/2
         z-30
       "
     >

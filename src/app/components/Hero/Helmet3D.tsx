@@ -104,42 +104,7 @@ const HelmetModel = () => {
   }, [scene]);
 
   useFrame((state) => {
-    /*
-     * Shared mouse:
-     *
-     * 0 → 1
-     *
-     * Convert to:
-     *
-     * -1 → 1
-     */
-    const mouseX = current.current.x * 2 - 1;
-
-    /*
-     * IMPORTANT:
-     *
-     * wireframe is inside a parent
-     * with scale 30 / 23.
-     *
-     * Therefore the movement value
-     * needs to be extremely small.
-     *
-     * 0.0015 × 30 = 0.045
-     *
-     * This keeps the helmet almost
-     * fixed over the head.
-     */
-    const targetX = mouseX * 0.0015;
-
-    wireframe.position.x = THREE.MathUtils.lerp(
-      wireframe.position.x,
-      targetX,
-      0.08,
-    );
-
-    /*
-     * Continuous scan animation.
-     */
+    wireframe.position.x = 0;
     wireframe.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
 
@@ -166,7 +131,7 @@ const HelmetModel = () => {
 
 const Helmet3D = () => {
   return (
-    <div className="pointer-events-none absolute inset-0 z-20">
+    <div className="pointer-events-none absolute left-1/2 top-0 z-20 h-full w-screen -translate-x-1/2">
       <Canvas
         camera={{
           position: [0, 0, 5],
@@ -185,6 +150,6 @@ const Helmet3D = () => {
   );
 };
 
-useGLTF.preload("/assets/hero/helmet-21.glb");
+useGLTF.preload("/public/assets/hero/helmet-21.glb");
 
 export default Helmet3D;
