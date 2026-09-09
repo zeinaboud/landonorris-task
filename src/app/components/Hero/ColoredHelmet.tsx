@@ -23,7 +23,7 @@ const ROUGHNESS =
 function ColoredHelmetModel() {
   const { scene } = useGLTF(MODEL_PATH);
 
-  const { current } = useHeroMouse();
+  const { current, autoReveal } = useHeroMouse();
 
   const { size } = useThree();
 
@@ -360,9 +360,21 @@ function ColoredHelmetModel() {
   useFrame((state) => {
     timeRef.current = state.clock.getElapsedTime();
 
-    const targetX = current.current.x;
+    const revealX = THREE.MathUtils.lerp(
+      autoReveal.current.x,
+      current.current.x,
+      0.55,
+    );
 
-    const targetY = 1 - current.current.y;
+    const revealY = THREE.MathUtils.lerp(
+      autoReveal.current.y,
+      current.current.y,
+      0.55,
+    );
+
+    const targetX = revealX;
+
+    const targetY = 1 - revealY;
 
     // Smooth mouse movement
 

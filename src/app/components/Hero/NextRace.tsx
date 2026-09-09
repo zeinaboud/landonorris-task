@@ -95,7 +95,7 @@ const NextRace = forwardRef<HTMLDivElement>((_, ref) => {
       {/* CARD BACKGROUND */}
 
       <img
-        src="/assets/hero/next-rice.svg"
+        src="/assets/hero/next-race-frame.svg"
         alt=""
         aria-hidden="true"
         className="

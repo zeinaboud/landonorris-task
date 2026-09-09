@@ -7,6 +7,7 @@ type HeroMouseContextValue = {
   current: React.MutableRefObject<THREE.Vector2>;
   target: React.MutableRefObject<THREE.Vector2>;
   velocity: React.MutableRefObject<THREE.Vector2>;
+  autoReveal: React.MutableRefObject<THREE.Vector2>;
 };
 
 const HeroMouseContext = createContext<HeroMouseContextValue | null>(null);
@@ -17,6 +18,8 @@ export const HeroMouseProvider = ({ children }: { children: ReactNode }) => {
   const current = useRef(new THREE.Vector2(0.5, 0.5));
 
   const velocity = useRef(new THREE.Vector2(0, 0));
+
+  const autoReveal = useRef(new THREE.Vector2(1.12, 0.2));
 
   const lastMouse = useRef(new THREE.Vector2(0.5, 0.5));
 
@@ -38,8 +41,14 @@ export const HeroMouseProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let animationFrame = 0;
+    const startedAt = performance.now();
 
     const update = () => {
+      const elapsed = (performance.now() - startedAt) / 1000;
+      const sweep = Math.cos(elapsed * 0.84);
+
+      autoReveal.current.set(0.5 + sweep * 0.62, 0.5 - sweep * 0.3);
+
       // Smooth position
       current.current.lerp(target.current, 0.09);
 
@@ -71,6 +80,7 @@ export const HeroMouseProvider = ({ children }: { children: ReactNode }) => {
         current,
         target,
         velocity,
+        autoReveal,
       }}
     >
       {children}

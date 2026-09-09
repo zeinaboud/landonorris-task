@@ -150,6 +150,6 @@ const Helmet3D = () => {
   );
 };
 
-useGLTF.preload("/public/assets/hero/helmet-21.glb");
+useGLTF.preload("/assets/hero/helmet-21.glb");
 
 export default Helmet3D;

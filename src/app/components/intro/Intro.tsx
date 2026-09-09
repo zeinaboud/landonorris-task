@@ -156,7 +156,7 @@ export default function Intro() {
   return (
     <div
       ref={introRef}
-      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-[#D2FF00]"
+      className="fixed inset-0 z-[100000] flex items-center justify-center overflow-hidden bg-[#D2FF00]"
     >
       <div ref={logoRef} className="relative w-[78px] md:w-[105px]">
         <svg

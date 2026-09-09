@@ -2,9 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { useHeroMouse } from "./HeroMouse";
 
 const HeroWebGL = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { autoReveal } = useHeroMouse();
 
   useEffect(() => {
     const container = containerRef.current;
@@ -50,7 +52,7 @@ const HeroWebGL = () => {
 
     const loader = new THREE.TextureLoader();
 
-    const patternTexture = loader.load("/assets/pattern2.jpg");
+    const patternTexture = loader.load("/assets/patern3-white.jpeg");
 
     const grayTexture = loader.load("/assets/pattern3-gray.jpg");
 
@@ -960,6 +962,7 @@ const HeroWebGL = () => {
     const lastCurrentMouse = new THREE.Vector2(0.5, 0.5);
 
     const mouseVelocity = new THREE.Vector2(0, 0);
+    const revealMouse = new THREE.Vector2(0.5, 0.5);
 
     let mouseSpeed = 0;
 
@@ -1079,7 +1082,9 @@ const HeroWebGL = () => {
       // UPDATE SHADER
       // ----------------------------------------------------------
 
-      material.uniforms.uMouse.value.copy(currentMouse);
+      revealMouse.copy(autoReveal.current).lerp(currentMouse, 0.55);
+
+      material.uniforms.uMouse.value.copy(revealMouse);
 
       material.uniforms.uMouseVelocity.value.copy(mouseVelocity);
 
