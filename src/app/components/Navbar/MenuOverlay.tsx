@@ -241,7 +241,7 @@ const MenuOverlay = ({ isOpen, onClose }: MenuOverlayProps) => {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-40 -translate-y-full overflow-visible bg-[#282C20]"
+      className="fixed inset-0 z-40 overflow-visible bg-[#282C20]"
       inert={!isOpen ? true : undefined}
       aria-hidden={!isOpen}
     >

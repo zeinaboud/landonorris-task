@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Rive, Fit, Alignment } from "@rive-app/canvas-lite";
+import { Rive, StateMachineInput } from "@rive-app/canvas-lite";
 import gsap from "gsap";
 
 export default function NextRace() {
   const cardRef = useRef<HTMLDivElement>(null);
   const circuitCanvasRef = useRef<HTMLCanvasElement>(null);
   const helmetCanvasRef = useRef<HTMLCanvasElement>(null);
+
   const circuitRiveRef = useRef<Rive | null>(null);
   const helmetRiveRef = useRef<Rive | null>(null);
 
@@ -28,36 +29,42 @@ export default function NextRace() {
       );
     }, cardRef);
 
+    // CIRCUIT
     const circuit = new Rive({
       src: "/assets/hero/rive/circuits.riv",
       canvas: circuitCanvasRef.current,
       autoplay: true,
       stateMachines: "circuits",
-      fit: Fit.Contain,
-      alignment: Alignment.Center,
+      onLoad: () => {
+        const inputs = circuit.stateMachineInputs("circuits");
+
+        if (!inputs) return;
+
+        const silverstoneInput = inputs.find(
+          (input) => input.name === "silverstone",
+        );
+
+        if (silverstoneInput && "value" in silverstoneInput) {
+          (silverstoneInput as StateMachineInput).value = 1;
+        }
+      },
+      onLoadError: (error) => {
+        console.error("[NextRace] Failed to load circuit animation:", error);
+      },
     });
 
     circuitRiveRef.current = circuit;
 
-    circuit.on("load", () => {
-      const inputs = circuit.stateMachineInputs("circuits");
-      const silverstoneInput = inputs.find(
-        (input) => input.name === "silverstone",
-      );
-
-      if (silverstoneInput && "value" in silverstoneInput) {
-        silverstoneInput.value = 1;
-      }
-    });
-
+    // HELMET
     const helmet = new Rive({
       src: "/assets/hero/rive/reef.riv",
       canvas: helmetCanvasRef.current,
       autoplay: true,
       artboard: "helmet-reef",
       stateMachines: "helmet-reef_play",
-      fit: Fit.Contain,
-      alignment: Alignment.Center,
+      onLoadError: (error) => {
+        console.error("[NextRace] Failed to load helmet animation:", error);
+      },
     });
 
     helmetRiveRef.current = helmet;
@@ -66,6 +73,7 @@ export default function NextRace() {
       ctx.revert();
       circuit.cleanup();
       helmet.cleanup();
+
       circuitRiveRef.current = null;
       helmetRiveRef.current = null;
     };
@@ -98,7 +106,7 @@ export default function NextRace() {
             />
           </div>
 
-          <div className="mt-[2px] flex items-center justify-center gap-[2px] font-mona text-[7px] font-bold uppercase leading-none md:gap-[3px] md:text-[10px]">
+          <div className="flex items-center justify-center gap-[2px] font-mona text-[7px] font-bold uppercase leading-none md:gap-[3px] md:text-[10px]">
             <span>Silverstone</span>
             <span>gp</span>
           </div>
