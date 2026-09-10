@@ -166,9 +166,9 @@ export default function Intro() {
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
         >
-          {/* =========================
+          {/*
               LEFT FILLED LOGO
-          ========================= */}
+           */}
 
           <path
             ref={leftRevealRef}
@@ -176,9 +176,9 @@ export default function Intro() {
             fill="#111112"
           />
 
-          {/* =========================
+          {/*
               RIGHT FILLED LOGO
-          ========================= */}
+          */}
 
           <path
             ref={rightRevealRef}
@@ -186,9 +186,9 @@ export default function Intro() {
             fill="#111112"
           />
 
-          {/* =========================
+          {/*
               LEFT TRACE
-          ========================= */}
+           */}
 
           <path
             ref={leftTraceRef}
@@ -198,10 +198,6 @@ export default function Intro() {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-
-          {/* =========================
-              RIGHT TRACE
-          ========================= */}
 
           <path
             ref={rightTraceRef}

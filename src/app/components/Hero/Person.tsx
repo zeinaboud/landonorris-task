@@ -15,7 +15,7 @@ const Person = () => {
     let animationFrame = 0;
 
     const update = () => {
-      // Shared mouse position: 0 → 1
+      // Map shared mouse position (0 → 1) to a -1 → 1 range
       const x = current.current.x * 2 - 1;
       const y = current.current.y * 2 - 1;
 
@@ -42,37 +42,15 @@ const Person = () => {
 
   return (
     <div
-      className="
-        pointer-events-none
-        absolute
-        inset-0
-        z-10
-        flex
-        items-end
-        justify-center
-      "
-      style={{
-        perspective: "1000px",
-      }}
+      className="pointer-events-none absolute inset-0 z-10 flex items-end justify-center"
+      style={{ perspective: "1000px" }}
     >
       <img
         ref={personRef}
         src="/assets/hero/person2.webp"
         alt="Lando Norris"
-        className="
-          
-          h-[100%]
-          w-auto
-          max-w-none
-          object-contain
-          object-bottom
-          flex
-          justify-center
-        "
-        style={{
-          transformStyle: "preserve-3d",
-          willChange: "transform",
-        }}
+        className="flex h-full w-auto max-w-none justify-center object-contain object-bottom"
+        style={{ transformStyle: "preserve-3d", willChange: "transform" }}
       />
     </div>
   );
