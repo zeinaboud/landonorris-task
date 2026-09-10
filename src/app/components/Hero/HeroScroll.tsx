@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useLayoutEffect, useRef } from "react";
+import { ReactNode, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -23,6 +23,8 @@ const HeroScroll = ({ children, nextSection }: HeroScrollProps) => {
   const nextRaceRef = useRef<HTMLDivElement>(null);
   const grayPersonRef = useRef<HTMLDivElement>(null);
   const signatureContainerRef = useRef<HTMLDivElement>(null);
+
+  const [showScrollLock, setShowScrollLock] = useState(true);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -50,6 +52,10 @@ const HeroScroll = ({ children, nextSection }: HeroScrollProps) => {
           end: "bottom bottom",
           scrub: 1.2,
           invalidateOnRefresh: true,
+
+          onUpdate: (self) => {
+            setShowScrollLock(self.progress < 0.01);
+          },
         },
       });
 
@@ -70,7 +76,12 @@ const HeroScroll = ({ children, nextSection }: HeroScrollProps) => {
       // Next race disappears
       tl.to(
         nextRace,
-        { autoAlpha: 0, y: 10, ease: "none", duration: 0.12 },
+        {
+          autoAlpha: 0,
+          y: 10,
+          ease: "none",
+          duration: 0.12,
+        },
         0.18,
       );
 
@@ -89,10 +100,26 @@ const HeroScroll = ({ children, nextSection }: HeroScrollProps) => {
       );
 
       // Phase 3: hero disappears
-      tl.to(hero, { opacity: 0, ease: "none", duration: 0.04 }, 0.95);
+      tl.to(
+        hero,
+        {
+          opacity: 0,
+          ease: "none",
+          duration: 0.04,
+        },
+        0.95,
+      );
 
       // Phase 4: gray person appears
-      tl.to(grayPerson, { autoAlpha: 1, ease: "none", duration: 0.06 }, 0.97);
+      tl.to(
+        grayPerson,
+        {
+          autoAlpha: 1,
+          ease: "none",
+          duration: 0.06,
+        },
+        0.97,
+      );
 
       // Phase 5: reveal the signature from top to bottom
       tl.to(
@@ -148,7 +175,9 @@ const HeroScroll = ({ children, nextSection }: HeroScrollProps) => {
           <Signature />
         </div>
 
-        <ScrollLockButton />
+        <div className="pointer-events-none absolute inset-0 z-[100]">
+          <ScrollLockButton visible={showScrollLock} />
+        </div>
       </div>
     </section>
   );

@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-const ScrollLockButton = () => {
+type ScrollLockButtonProps = {
+  visible?: boolean;
+};
+
+const ScrollLockButton = ({ visible = true }: ScrollLockButtonProps) => {
   const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
@@ -33,7 +37,9 @@ const ScrollLockButton = () => {
       onClick={handleClick}
       aria-label={isLocked ? "Back to scroll" : "Tap to lock"}
       aria-pressed={isLocked}
-      className="pointer-events-auto absolute bottom-5 right-5 z-[100] flex h-10 items-center md:hidden"
+      className={`pointer-events-auto absolute bottom-5 right-5 z-[100] flex h-10 items-center transition-opacity duration-200 md:hidden ${
+        visible ? "opacity-100" : "pointer-events-none opacity-0"
+      }`}
     >
       <span className="px-4 text-[9px] font-bold text-white uppercase tracking-[0.08em]">
         {isLocked ? "BACK TO SCROLL" : "TAP TO LOCK"}
